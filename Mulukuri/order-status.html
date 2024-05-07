@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lollipop Chart for Status</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    #chart {
+      position: relative;
+    }
+    .dot {
+      fill: steelblue;
+    }
+    .label {
+      font-size: 12px;
+      fill: black;
+      text-anchor: middle;
+    }
+    .chart-container {
+        display: flex;
+        flex-direction: column;
+
+    }
+    .links {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+    }
+    .links a {
+      text-decoration: none;
+      color: #000;
+      margin: 5px;
+      padding: 5px;
+    }
+    .links a:hover {
+      text-decoration: underline;
+      color: #fff;
+      background: #000;
+      margin: 8px;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 18px;
+      transition: all 400ms ease-in-out;
+    }
+    .navbar{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+    .filters {
+        display: flex;
+        flex-direction: column;
+        /* align-items: center; */
+        width: 500px;
+    }
+    .chart-filters {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin: 50px 150px;
+    }
+    .chart-description {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    .descripttion {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+    <div class="chart-container">
+        <div class="navbar">
+          <div class="links">
+            <a href="/index.html">Home Page</a>
+            <a href="/Kariuki/sales-analysis.html">Sales Analysis</a>
+            <a href="/Chuku/product-analysis.html">Product Analysis</a>
+            <a href="/Ijogho/geographical.html">Geographical Analysis</a>
+            <a href="/Zubair/courier-analysis.html">Courier Analysis</a>
+          </div>
+          <div class="teesside-logo">
+            <img src="/images/TeessideUniversity2b_black.png" alt="">
+            <h2><strong>Module Code:</strong> CIS4014-N</h2>
+          </div>
+        </div>
+        
+        <div class="chart-filters">
+          <div class="filters">
+            <h3>Filter By:</h3>
+              <div>
+                <label for="category">Select Category:</label>
+                <select id="category"></select>
+              </div>
+              <div>
+                <label for="courierStatus">Select Courier Status:</label>
+                <select id="courierStatus"></select>
+              </div>
+              <div>
+                <label for="shipState">Select Ship State:</label>
+                <select id="shipState"></select>
+              </div>
+              <div>
+                <label for="b2b">B2B:</label>
+                <select id="b2b"></select>
+              </div>
+              <div>
+                <label for="month">Select Month:</label>
+                <select id="month"></select>
+              </div>
+          </div>
+          <div class="chart-description">
+            <div id="chart"></div>
+            <div class="description">
+              <h3>Order Status Analysis</h3>
+              <p>
+                This analysis provides an interactive way to explore and visualize Amazon sales data by Order Statuses, allowing users to gain insights and identify trends based on different filtering criteria
+              </p>
+            </div>
+          </div>
+        </div>
+    </div>
+
+<script>
+    // set the dimensions and margins of the graph
+    var margin = {top: 50, right: 30, bottom: 150, left: 60},
+        width = 1000 - margin.left - margin.right,
+        height = 800 - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+    // Load data from JSON file
+    d3.json("/Mulukuri/Amazon Sale Report - Clean - Clean.json").then(function(data) {
+      
+      // Get unique categories
+      var categories = Array.from(new Set(data.map(function(d) { return d.Category; })));
+      // Populate category filter
+      var categoryFilter = d3.select("#category");
+      categoryFilter.append("option").attr("value", "All").text("All Categories");
+      categories.forEach(function(category) {
+        categoryFilter.append("option").attr("value", category).text(category);
+      });
+
+      // Get unique courier statuses
+      var courierStatuses = Array.from(new Set(data.map(function(d) { return d.CourierStatus; })));
+      // Populate courier status filter
+      var courierStatusFilter = d3.select("#courierStatus");
+      courierStatusFilter.append("option").attr("value", "All").text("All Courier Statuses");
+      courierStatuses.forEach(function(courierStatus) {
+        courierStatusFilter.append("option").attr("value", courierStatus).text(courierStatus);
+      });
+
+      // Get unique ship states
+      var shipStates = Array.from(new Set(data.map(function(d) { return d["ship-state"]; })));
+      // Populate ship state filter
+      var shipStateFilter = d3.select("#shipState");
+      shipStateFilter.append("option").attr("value", "All").text("All Ship States");
+      shipStates.forEach(function(shipState) {
+        shipStateFilter.append("option").attr("value", shipState).text(shipState);
+      });
+
+      // Get unique B2B values
+      var b2bValues = Array.from(new Set(data.map(function(d) { return d.B2B; })));
+      // Populate B2B filter
+      var b2bFilter = d3.select("#b2b");
+      b2bFilter.append("option").attr("value", "All").text("All B2B");
+      b2bValues.forEach(function(b2bValue) {
+        b2bFilter.append("option").attr("value", b2bValue).text(b2bValue);
+      });
+
+      // Get unique months
+      var months = Array.from(new Set(data.map(function(d) { return d.Month; })));
+      // Populate month filter
+      var monthFilter = d3.select("#month");
+      monthFilter.append("option").attr("value", "All").text("All Months");
+      months.forEach(function(month) {
+        monthFilter.append("option").attr("value", month).text(month);
+      });
+
+      // Function to update chart based on selected filters
+      function updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth) {
+        var filteredData = data;
+        if (selectedCategory !== "All") {
+          filteredData = filteredData.filter(function(d) { return d.Category === selectedCategory; });
+        }
+        if (selectedCourierStatus !== "All") {
+          filteredData = filteredData.filter(function(d) { return d.CourierStatus === selectedCourierStatus; });
+        }
+        if (selectedShipState !== "All") {
+          filteredData = filteredData.filter(function(d) { return d["ship-state"] === selectedShipState; });
+        }
+        if (selectedB2B !== "All") {
+          filteredData = filteredData.filter(function(d) { return d.B2B === selectedB2B; });
+        }
+        if (selectedMonth !== "All") {
+          filteredData = filteredData.filter(function(d) { return d.Month === selectedMonth; });
+        }
+
+        // X scale
+        var x = d3.scaleBand()
+          .range([0, width])
+          .domain(filteredData.map(function(d) { return d.Status; }))
+          .padding(0.2);
+
+        svg.selectAll("g").remove(); // Remove previous axis elements
+
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+            .attr("transform", "translate(-10,0)rotate(-45)")
+            .style("text-anchor", "end");
+
+        // Y scale
+        var y = d3.scaleLinear()
+          .domain([0, d3.max(filteredData, function(d) { return +d.index; })])
+          .range([height, 0]);
+
+        svg.append("g")
+          .call(d3.axisLeft(y));
+
+        // Circles
+        svg.selectAll("circle").remove(); // Remove previous circles
+
+        svg.selectAll("mycircle")
+          .data(filteredData)
+          .enter()
+          .append("circle")
+            .attr("class", "dot")
+            .attr("cx", function(d) { return x(d.Status) + x.bandwidth()/2; })
+            .attr("cy", function(d) { return y(+d.index); })
+            .attr("r", 3)
+            .attr("stroke", "blue")
+            .attr("stroke-width", 2)
+            .attr("fill", "white");
+      }
+
+      // Initial rendering
+      updateChart("All", "All", "All", "All", "All");
+
+      // Add event listener to the category filter
+      d3.select("#category").on("change", function() {
+        var selectedCategory = d3.select(this).property("value");
+        var selectedCourierStatus = d3.select("#courierStatus").property("value");
+        var selectedShipState = d3.select("#shipState").property("value");
+        var selectedB2B = d3.select("#b2b").property("value");
+        var selectedMonth = d3.select("#month").property("value");
+        updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth);
+      });
+
+      // Add event listener to the courier status filter
+      d3.select("#courierStatus").on("change", function() {
+        var selectedCategory = d3.select("#category").property("value");
+        var selectedCourierStatus = d3.select(this).property("value");
+        var selectedShipState = d3.select("#shipState").property("value");
+        var selectedB2B = d3.select("#b2b").property("value");
+        var selectedMonth = d3.select("#month").property("value");
+        updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth);
+      });
+
+      // Add event listener to the ship state filter
+      d3.select("#shipState").on("change", function() {
+        var selectedCategory = d3.select("#category").property("value");
+        var selectedCourierStatus = d3.select("#courierStatus").property("value");
+        var selectedShipState = d3.select(this).property("value");
+        var selectedB2B = d3.select("#b2b").property("value");
+        var selectedMonth = d3.select("#month").property("value");
+        updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth);
+      });
+
+      // Add event listener to the B2B filter
+      d3.select("#b2b").on("change", function() {
+        var selectedCategory = d3.select("#category").property("value");
+        var selectedCourierStatus = d3.select("#courierStatus").property("value");
+        var selectedShipState = d3.select("#shipState").property("value");
+        var selectedB2B = d3.select(this).property("value");
+        var selectedMonth = d3.select("#month").property("value");
+        updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth);
+      });
+
+      // Add event listener to the Month filter
+      d3.select("#month").on("change", function() {
+        var selectedCategory = d3.select("#category").property("value");
+        var selectedCourierStatus = d3.select("#courierStatus").property("value");
+        var selectedShipState = d3.select("#shipState").property("value");
+        var selectedB2B = d3.select("#b2b").property("value");
+        var selectedMonth = d3.select(this).property("value");
+        updateChart(selectedCategory, selectedCourierStatus, selectedShipState, selectedB2B, selectedMonth);
+      });
+    });
+</script>
+</body>
+</html>

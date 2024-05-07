@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Sales by Category - Column Chart</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* Add CSS styling here if needed */
+        .column {
+            fill: rgb(36, 35, 35);
+        }
+
+        .column:hover {
+            fill: orange;
+        }
+
+        .axis-x text {
+            font: 10px sans-serif;
+        }
+
+        .axis-y text {
+            font: 10px sans-serif;
+        }
+
+        .label {
+            fill: white;
+            font-size: 14px;
+            text-anchor: middle;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        .bar-label {
+            font-size: 10px;
+            text-anchor: middle;
+            fill: black;
+        }
+
+        .axis-label {
+            font-size: 12px;
+            text-anchor: middle;
+            fill: black;
+        }
+        .links {
+            display: flex;
+            flex-direction: row;
+            text-decoration: none;
+        }
+        .links a {
+            margin: 5px;
+            padding: 5px;
+            text-decoration: none;
+            color: black;
+        }
+        .links a:hover {
+            margin: 8px;
+            padding: 8px;
+            background: #000;
+            transition: 500ms ease-in-out ;
+            font-size: 18px;
+            color: white;
+            text-decoration: underline;
+            border-radius: 5px;
+        }
+        .filter {
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            margin: 5px 50px;
+            display: flex;
+            flex-direction: row;
+            gap: 50px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chart-description {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .filters {
+            /* width: 350px; */
+            display: flex;
+            flex-direction: column;
+        }
+        .body {
+            display: flex;
+            flex-direction: column;
+        }
+        .description {
+            display: flex;
+            flex-direction: column;
+            width: 500px;
+            height: auto;
+            align-items: center;
+        }
+        .filter-labels {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 5px;
+            /* justify-content: space-between; */
+        }
+        .header {
+            margin: 5px 20px;
+            padding: 5px 20px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+        .teesside-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="body">
+        <div class="header">
+            <div class="links">
+                <a href="/index.html">Home Page</a>
+                <a href="/Chuku/product-analysis.html">Product Analysis</a>
+                <a href="/Ijogho/geographical.html">Geographical analysis</a>
+                <a href="/Zubair/courier-analysis.html">Courier Analysis</a>
+                <a href="/Mulukuri/order-status.html">Order Status Analysis</a>
+            </div>
+            <div class="teesside-logo">
+                <img src="/images/TeessideUniversity2b_black.png" alt="">
+                <h2><strong>Module Code:</strong> CIS4014-N</h2>
+            </div>
+        </div>
+        <div class="navbar">
+            <div class="filters">
+                <h3>Filter by:</h3>
+                <div class="filter-labels">
+                    <label for="stateFilter">State:</label>
+                    <select id="stateFilter"></select>
+                </div>
+                <hr/>
+                <div class="filter-labels">
+                    <label for="b2bFilter">B2B:</label>
+                    <select id="b2bFilter"></select>
+                </div>
+                <hr/>
+                <div class="filter-labels">
+                    <label for="monthFilter">Month:</label>
+                    <select id="monthFilter"></select>
+                </div>
+                <hr/>
+                <div class="filter-labels">
+                    <label for="fulfilledbyFilter">Fulfillment Method:</label>
+                    <select id="fulfilledbyFilter"></select>
+                </div>
+                <hr/>
+                <div class="filter-labels">
+                    <label for="shipservicelevelFilter">Ship Service Level:</label>
+                    <select id="shipServiceLevelFilter"></select>
+                </div>
+                <hr/>
+                <div class="filter-labels">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter"></select>
+                </div>
+            </div>
+            <!-- Add margin-bottom to the filters -->
+            <div class="chart-description">
+                <div id="chart"></div>
+                <div class="description">
+                    <h3>Sales Analysis</h3>
+                    <p>
+                        This analysis provides an interactive way to explore and visualize Amazon sales data by category, allowing users to gain insights and identify trends based on different filtering criteria
+                    </p>
+                    <br/>
+                    <p>
+                        Generally, Set has most sales.  However, <strong><em>Puducherry</em></strong>, <strong><em>Chandigarh</em></strong> and <strong><em>Meghalaya</em></strong> experienced more sales from Kurta than Set
+                    </p>
+                </div>
+            </div>
+        </div>
+    
+    
+        <div class="tooltip"></div>
+    </div>
+
+
+    <script>
+        // SVG Size
+        const width = 1000;
+        const height = 800;
+
+        // Margin
+        const margin = { top: 40, right: 20, bottom: 80, left: 40 };
+        const graphWidth = width - margin.left - margin.right;
+        const graphHeight = height - margin.top - margin.bottom;
+
+        // Create SVG element
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Add x and y axis labels
+        svg.append("text")
+            .attr("class", "x-label")
+            .attr("transform", `translate(${width / 2}, ${height - margin.bottom / 3})`)
+            .style("text-anchor", "middle")
+            .text("Category");
+
+        svg.append("text")
+            .attr("class", "y-label")
+            .attr("transform", `translate(${margin.left / 3}, ${height / 2}) rotate(-90)`)
+            .style("text-anchor", "middle")
+            .text("Sales");
+
+        // Fetch data from JSON file
+        fetch('/Kariuki/Amazon Sale Report - Clean - Clean.json')
+            .then(response => response.json())
+            .then(data => {
+                // Get unique ship states for filter
+                const shipStates = Array.from(new Set(data.map(d => d["ship-state"])));
+                // Populate ship state filter dropdown
+                const stateFilter = d3.select("#stateFilter");
+                stateFilter.selectAll("option")
+                    .data(["All", ...shipStates])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+
+                // Get unique B2B values for filter
+                const b2bValues = Array.from(new Set(data.map(d => d["B2B"])));
+                // Populate B2B filter dropdown
+                const b2bFilter = d3.select("#b2bFilter");
+                b2bFilter.selectAll("option")
+                    .data(["All", ...b2bValues])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+
+                // Get unique month values for filter
+                const monthValues = Array.from(new Set(data.map(d => d["Month"])));
+                // Populate month filter dropdown
+                const monthFilter = d3.select("#monthFilter");
+                monthFilter.selectAll("option")
+                    .data(["All", ...monthValues])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+                
+                // Get unique fulfilled by values for filter
+                const fulfilledbyValues = Array.from(new Set(data.map(d => d["fulfilled-by"])));
+                // Populate month filter dropdown
+                const fulfilledbyFilter = d3.select("#fulfilledbyFilter");
+                fulfilledbyFilter.selectAll("option")
+                    .data(["All", ...fulfilledbyValues])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+
+                // Get unique month values for filter
+                const shipServiceLevelValues = Array.from(new Set(data.map(d => d["ship-service-level"])));
+                // Populate month filter dropdown
+                const shipServiceLevelFilter = d3.select("#shipServiceLevelFilter");
+                shipServiceLevelFilter.selectAll("option")
+                    .data(["All", ...shipServiceLevelValues])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+
+                // Get unique month values for filter
+                const statusValues = Array.from(new Set(data.map(d => d["Status"])));
+                // Populate month filter dropdown
+                const statusFilter = d3.select("#statusFilter");
+                statusFilter.selectAll("option")
+                    .data(["All", ...statusValues])
+                    .enter()
+                    .append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
+
+
+                // Function to update chart based on filters
+                function updateChart() {
+                    const selectedState = stateFilter.property("value");
+                    const selectedB2B = b2bFilter.property("value");
+                    const selectedMonth = monthFilter.property("value");
+                    const selectedFulfillment = fulfilledbyFilter.property("value");
+                    const selectedShipServiceLevel = shipServiceLevelFilter.property("value");
+                    const selectedStatus = statusFilter.property("value");
+
+                    let filteredData = data;
+
+                    if (selectedState !== "All") {
+                        filteredData = filteredData.filter(d => d["ship-state"] === selectedState);
+                    }
+                    if (selectedB2B !== "All") {
+                        filteredData = filteredData.filter(d => d["B2B"] === selectedB2B);
+                    }
+                    if (selectedMonth !== "All"){
+                        filteredData = filteredData.filter(d => d["Month"] === selectedMonth);
+                    }
+                    if (selectedFulfillment !== "All"){
+                        filteredData = filteredData.filter(d => d["fulfilled-by"] === selectedFulfillment);
+                    }
+                    if (selectedShipServiceLevel !== "All"){
+                        filteredData = filteredData.filter(d => d["ship-service-level"] === selectedShipServiceLevel);
+                    }
+                    if (selectedStatus !== "All"){
+                        filteredData = filteredData.filter(d => d["Status"] === selectedStatus);
+                    }
+
+                    // Group filtered data by category and calculate total sales amount for each category
+                    const salesByCategory = {};
+                    filteredData.forEach(d => {
+                        if (!isNaN(parseFloat(d.Amount))) {
+                            if (!salesByCategory[d.Category]) {
+                                salesByCategory[d.Category] = 0;
+                            }
+                            salesByCategory[d.Category] += parseFloat(d.Amount);
+                        }
+                    });
+
+                    // Convert grouped data to array of objects
+                    const salesArray = Object.keys(salesByCategory).map(key => ({
+                        category: key,
+                        sales: salesByCategory[key]
+                    }));
+
+                    // Filter out NaN values
+                    const filteredSalesArray = salesArray.filter(d => !isNaN(d.sales));
+
+                    // Update scales
+                    const xScale = d3.scaleBand()
+                        .domain(filteredSalesArray.map(d => d.category))
+                        .range([margin.left, width - margin.right])
+                        .padding(0.1);
+
+                    const yScale = d3.scaleLinear()
+                        .domain([0, d3.max(filteredSalesArray, d => d.sales)])
+                        .nice()
+                        .range([height - margin.bottom, margin.top]);
+
+                    // Draw columns with transition
+                    svg.selectAll(".column")
+                        .data(filteredSalesArray)
+                        .join(
+                            enter => enter.append("rect")
+                                .attr("class", "column")
+                                .attr("x", d => xScale(d.category))
+                                .attr("y", height - margin.bottom)
+                                .attr("width", xScale.bandwidth())
+                                .attr("height", 0)
+                                .attr("fill", "steelblue")
+                                .on("mouseover", function(event, d) {
+                                    d3.select(this).attr("fill", "orange");
+                                    d3.select(this).attr("opacity", "0.7");
+                                    // Show tooltip
+                                    const tooltip = d3.select(".tooltip");
+                                    tooltip.style("display", "block")
+                                        .style("left", (event.pageX + 10) + "px")
+                                        .style("top", (event.pageY - 20) + "px")
+                                        .html(`Category: ${d.category}<br>Sales: ${d.sales.toFixed(0)}`);
+                                })
+                                .on("mouseout", function(event, d) {
+                                    d3.select(this).attr("fill", "steelblue");
+                                    d3.select(this).attr("opacity", "1");
+                                    // Hide tooltip
+                                    const tooltip = d3.select(".tooltip");
+                                    tooltip.style("display", "none");
+                                })
+                                .transition()
+                                .duration(1500)
+                                .delay((d, i) => i * 100)
+                                .attr("y", d => yScale(d.sales))
+                                .attr("height", d => height - margin.bottom - yScale(d.sales)), update => update
+                                .attr("x", d => xScale(d.category))
+                                .attr("width", xScale.bandwidth())
+                                .transition()
+                                .duration(1500)
+                                .attr("y", d => yScale(d.sales))
+                                .attr("height", d => height - margin.bottom - yScale(d.sales)),
+                            exit => exit.remove()
+                        );
+
+                    // Add data labels
+                    svg.selectAll(".label")
+                        .data(filteredSalesArray)
+                        .join(
+                            enter => enter.append("text")
+                                .attr("class", "label")
+                                .attr("x", d => xScale(d.category) + xScale.bandwidth() / 2)
+                                .attr("y", d => yScale(d.sales))
+                                .text(d => d.sales.toFixed(0))
+                                .attr("text-anchor", "middle")
+                                .attr("dy", "-0.5em")
+                                .attr("fill", "white"),
+                            update => update
+                                .attr("x", d => xScale(d.category) + xScale.bandwidth() / 2)
+                                .attr("y", d => yScale(d.sales))
+                                .text(d => d.sales.toFixed(0)),
+                            exit => exit.remove()
+                        );
+
+                    // Add sales amount labels on top of bars
+                    svg.selectAll(".bar-label")
+                        .data(filteredSalesArray)
+                        .join(
+                            enter => enter.append("text")
+                                .attr("class", "bar-label")
+                                .attr("x", d => xScale(d.category) + xScale.bandwidth() / 2)
+                                .attr("y", d => yScale(d.sales) - 5)
+                                .attr("text-anchor", "middle")
+                                .attr("fill", "black")
+                                .text(d => d.sales.toFixed(0)),
+                            update => update
+                                .attr("x", d => xScale(d.category) + xScale.bandwidth() / 2)
+                                .attr("y", d => yScale(d.sales) - 5)
+                                .text(d => d.sales.toFixed(0)),
+                            exit => exit.remove()
+                        );
+
+                    // Create X axis
+                    svg.select(".axis-x")
+                        .attr("transform", `translate(0,${height - margin.bottom})`)
+                        .call(d3.axisBottom(xScale))
+                        .selectAll("text")
+                        .attr("transform", "rotate(-45)")
+                        .style("text-anchor", "end");
+
+                    // Create Y axis
+                    svg.select(".axis-y")
+                        .attr("transform", `translate(${margin.left},0)`)
+                        .call(d3.axisLeft(yScale));
+
+                    // X axis label
+                    svg.select(".x-label")
+                        .attr("transform", `translate(${width / 2}, ${height - margin.bottom / 3})`)
+                        .style("text-anchor", "middle")
+                        .text("Category");
+
+                    // Y axis label
+                    svg.select(".y-label")
+                        .attr("transform", `translate(${margin.left / 3}, ${height / 2}) rotate(-90)`)
+                        .style("text-anchor", "middle")
+                        .text("Sales");
+                }
+
+                // Add event listener to ship state filter dropdown
+                stateFilter.on("change", updateChart);
+
+                // Add event listener to B2B filter dropdown
+                b2bFilter.on("change", updateChart);
+
+                // Add event listener to Month Filter dropdown
+                monthFilter.on("change", updateChart);
+
+                // Add event listener to fuifilled by Filter dropdown
+                fulfilledbyFilter.on("change", updateChart);
+
+                // Add event listener to ship service level Filter dropdown
+                shipServiceLevelFilter.on("change", updateChart);
+            
+                // Add event listener to Status Filter dropdown
+                statusFilter.on("change", updateChart);
+
+                
+                // Initialize chart with all data
+                stateFilter.node().value = "All";
+                b2bFilter.node().value = "All";
+                monthFilter.node().value = "All";
+                fulfilledbyFilter.node().value = "All";
+                shipServiceLevelFilter.node().value = "All";
+                stateFilter.node().value = "All";
+
+
+                updateChart();
+            })
+            .catch(error => console.error('Error fetching data:', error));
+
+    </script>
+</body>
+</html>

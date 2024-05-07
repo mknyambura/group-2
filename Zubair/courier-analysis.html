@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doughnut Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @keyframes bounce {
+            0% {
+                transform: translateY(-50px);
+            }
+            50% {
+                transform: translateY(50px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        .arc {
+            width: 50px;
+            height: 50px;
+        }
+        .chart-container {
+            /* text-align: center; */
+            position: relative;
+        }
+        .legend {
+            font-size: 12px;
+        }
+        .label-line {
+            fill: none;
+            stroke: #333;
+            stroke-width: 1.5;
+        }
+        .label-text {
+            font-size: 14px; /* Increased font size */
+            text-anchor: middle;
+        }
+        #back-link {
+            position: absolute;
+            top: 10%;
+            left: 10px;
+            z-index: 1;
+        }
+        #geographical-link {
+            position: absolute;
+            top: 10%;
+            right: 10px;
+            z-index: 1;
+        }
+        #svg-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            margin-top: 50%;
+
+        }
+        #size-filter {
+            /* position: absolute; */
+            top: 20%;
+            left: 10px;
+            z-index: 1;
+        }
+        #qty-filter {
+            /* position: absolute; */
+            top: 30%;
+            left: 10px;
+            z-index: 1;
+        }
+        @media screen and (max-width: 600px) {
+            #back-link, #size-filter, #qty-filter {
+                position: static;
+                display: block;
+                margin: 10px;
+            }
+        }
+        .links {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            margin: 10xp;
+            padding: 10px;
+        }
+        .links a{
+            text-decoration: none;
+            color: #000;
+            margin: 5px;
+            padding: 5px;
+        }
+        .links a:hover {
+            background-color: #000;
+            color: #fff;
+            margin: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            text-decoration: underline;
+            font-size: 18px;
+            transition: 400ms ease-in-out;
+        }
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px;
+
+            /* bottom: 50px; */
+        }
+        .svg-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        /* Tooltip style */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            background: #333;
+            color: #fff;
+            border-radius: 5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tooltip.visible {
+            opacity: 0.9;
+        }
+        .navbar {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+        .description {
+            display: flex;
+            flex-direction: column;
+            width: 400px;
+        }
+        .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <div class="header">
+            <div class="links">
+                <a href="/index.html">Home Page</a>
+                <a href="/Kariuki/sales-analysis.html">Sales Analysise</a>
+                <a href="/Chuku/product-analysis.html">Product Analysis</a>
+                <a href="/Ijogho/geographical.html">Geographical Analysis</a>
+                <a href="/Mulukuri/order-status.html">Order Status Analysis</a>
+            </div>
+            <div class="teesside-logo">
+                <img src="/images/TeessideUniversity2b_black.png" alt="">
+                <h2><strong>Module Code:</strong> CIS4014-N</h2>
+            </div>
+        </div>
+        <div class="navbar">
+            <div class="filters">
+                <h3>Filter by:</h3>
+                <select id="fulfilment-filter">
+                    <option value="All">All fulfilments</option>
+                </select>
+                <select id="category-filter">
+                    <option value="All">All Categories</option>
+                </select> 
+                <select id="B2B-filter">
+                    <option value="All">B2B</option>
+                </select>
+                <select id="month-filter">
+                    <option value="All">All Months</option>
+                </select>
+                <!-- <select id="sales-channel-filter">
+                    <option value="All">All Sales Channels</option>
+                </select>            -->
+            </div>
+            <div class="svg-container">
+                <svg id="doughnut-chart"></svg>
+                <div class="description">
+                    <h3>Courier and shipment Analysis</h3>
+                    <p>
+                        This analysis provides an interactive way to explore and visualize Amazon sales data by courier and shipment statuses, allowing users to gain insights and identify trends based on different filtering criteria
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Parse JSON data
+        d3.json("/Zubair/Amazon Sale Report - Clean - Clean.json").then(function(data) {
+            // Extract categories, sizes, and quantities
+            console.log(data)
+
+            const courierStatuses = {};
+            
+            const fulfilments = new Set();
+            const categories = new Set();
+            const b2bs = new Set();
+            const months = new Set();
+            const salesChannels = new Set();
+
+            data.forEach(function(d) {
+                const courierStatus = d["Courier Status"];
+                
+                const fulfilment = d.Fulfilment;
+                const category = d.Category;
+                const b2b = d.B2B;
+                const month = d.Month;
+                const salesChannel = d.SalesChannel; 
+
+                courierStatuses[courierStatus] = (courierStatuses[courierStatus] || 0) + 1;
+                
+                fulfilments.add(fulfilment);
+                categories.add(category);
+                b2bs.add(b2b);
+                months.add(month);
+                salesChannels.add(salesChannel);
+            });
+
+            const courierStatusData = Object.entries(courierStatuses);
+
+            const fulfilmentArray = Array.from(fulfilments);
+            const categoryArray = Array.from(categories);
+            const b2bArray = Array.from(b2bs);
+            const monthArray = Array.from(months);
+            const salesChannelArray = Array.from(salesChannels);
+
+            // Populate fulfilment filter dropdown
+            const fulfilmentFilter = d3.select("#fulfilment-filter");
+            fulfilmentFilter.selectAll("option")
+                .data(["All"].concat(fulfilmentArray))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+
+            // Populate category filter dropdown
+            const categoryFilter = d3.select("#category-filter");
+            categoryFilter.selectAll("option")
+                .data(["All"].concat(categoryArray))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+            
+            // Populate b2b filter dropdown
+            const b2bFilter = d3.select("#B2B-filter");
+            b2bFilter.selectAll("option")
+                .data(["All"].concat(b2bArray))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+            
+            // Populate month filter dropdown
+            const monthFilter = d3.select("#month-filter");
+            monthFilter.selectAll("option")
+                .data(["All"].concat(monthArray))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+            
+            // Populate sales channel filter dropdown
+            const salesChannelFilter = d3.select("#sales-channel-filter");
+            salesChannelFilter.selectAll("option")
+                .data(["All"].concat(salesChannelArray))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+
+
+            
+            // Set up SVG
+            const width = 1000;
+            const height = 800;
+            const radius = Math.min(width, height) / 2;
+            const svg = d3.select("#doughnut-chart")
+                          .attr("width", width)
+                          .attr("height", height)
+                          .append("g")
+                          .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+            // Add frame around pie chart
+            svg.append("rect")
+               .attr("x", -width / 2)
+               .attr("y", -height / 2)
+               .attr("width", width)
+               .attr("height", height)
+               .attr("fill", "none")
+            //    .attr("stroke", "#00FFD5")
+               .attr("stroke-width", 1);
+
+
+            // Define color scale
+            const color = d3.scaleOrdinal()
+                            .domain(courierStatusData.map(d => d[0]))
+                            .range(d3.schemePaired);
+
+            // Define pie
+            const pie = d3.pie()
+                          .value(d => d[1])
+                          .sort(null);
+
+            // Define arc
+            const arc = d3.arc()
+                          .innerRadius(radius * 0)
+                          .outerRadius(radius * 0.8);
+
+            // Define outer arc
+            const outerArc = d3.arc()
+                               .innerRadius(radius * 1.5)
+                               .outerRadius(radius * 0.9);
+
+            // Function to update chart based on selected fulfilment and category
+            function updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel) {
+
+                let filteredCourierStatusData = data;
+                if (selectedFulfilment !== "All") {
+                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.Fulfilment === selectedFulfilment);
+                }
+                if (selectedCategory !== "All") {
+                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.Category === selectedCategory);
+                }
+                if (selectedB2B !== "All") {
+                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.B2B === selectedB2B);
+                }
+                if (selectedMonth !== "All"){
+                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.Month === selectedMonth);
+                }
+                if (selectedSalesChannel !== "All"){
+                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.SalesChannel === selectedSalesChannel);
+                }
+
+                const filteredCourierStatuses = {};
+                filteredCourierStatusData.forEach(function(d) {
+                    const CourierStatus = d["Courier Status"];
+                    if (filteredCourierStatuses[CourierStatus]) {
+                        filteredCourierStatuses[CourierStatus] += parseFloat(d.index);
+                    } else {
+                        filteredCourierStatuses[CourierStatus] = parseFloat(d.index);
+                    }
+                });               
+                        
+                const filteredCourierStatusesData = Object.entries(filteredCourierStatuses); 
+
+                // Draw slices
+                const arcs = svg.selectAll(".arc") // Corrected selector
+                    .data(pie(filteredCourierStatusesData))
+                    .enter()
+                    .append("g")
+                    .attr("class", "arc");
+                            
+                arcs.append("path")
+                    .attr("fill", d => color(d.data[0]))
+                    .attr("d", arc)
+                    // Add 3D hover effect
+                    .on("mouseover", function(event, d) {
+                        tooltip.style("opacity", 0.9);
+                        tooltip.html(`${d.data[0]} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(1)}%)`)
+                                .style("left", (event.pageX) + "px")
+                                // .style("left", (d3.pointer(event, this)[0]) + "px")
+                                .style("top", (event.pageY -28) + "px");
+                                // .style("top", (d3.pointer(event, this)[1] - 28) + "px");    
+                                
+                        const pos = outerArc.centroid(d);
+                        const midAngle = (d.startAngle + d.endAngle) / 2;
+                        pos[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+                        d3.select(this)
+                          .transition()
+                          .duration(200)
+                          .attr("d", d3.arc()
+                                      .innerRadius(radius * 0)
+                                      .outerRadius(radius * 0.85)
+                                   );
+                        svg.append("text")
+                           .attr("class", "hover-label")
+                           .attr("transform", `translate(${pos})`)
+                           .attr("dy", "0.65em")
+                           .style("font-size", "16px")
+                           .attr("text-anchor", midAngle < Math.PI ? "start" : "end")
+                           .text(`${d.data[0]} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(1)}%)`);
+                    })
+
+                    .on("mouseout", function() {
+                        tooltip.style("opacity", 0);
+                        d3.select(this)
+                          .transition()
+                          .duration(200)
+                          .attr("d", arc); // Revert to original arc when mouse leaves
+                        svg.select(".hover-label").remove(); // Remove the hover label
+                    });
+
+
+                arcs.append("text")
+                    .attr("transform", function(d) {
+                        const centroid = arc.centroid(d);
+                        return `translate(${centroid})`;
+                    })
+                    .attr("dy", "0.35em")
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "16px")
+                    .text(d => `${d.data[0]} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(1)}%)`);
+
+
+
+                // Add legend
+                const legend = svg.selectAll(".legend")
+                                   .data(filteredCourierStatusesData)
+                                   .enter()
+                                   .append("g")
+                                   .attr("class", "legend")
+                                   .attr("transform", (d, i) => `translate(-20,${i * 20})`);
+
+                legend.append("rect")
+                      .attr("x", width - 18)
+                      .attr("width", 18)
+                      .attr("height", 18)
+                      .style("fill", d => color(d[0]));
+                legend.append("text")
+                      .attr("x", width - 24)
+                      .attr("y", 9)
+                      .attr("dy", ".35em")
+                      .style("text-anchor", "end")
+                      .text(d => d[0]);
+            }
+
+            // Initial chart
+            updateChart("All", "All", "All", "All", "All");
+
+            // Add event listeners for filter changes
+            fulfilmentFilter.on("change", function() {
+                const selectedFulfilment = this.value;
+                const selectedMonth = monthFilter.property("value");
+                const selectedCategory = categoryFilter.property("value");
+                const selectedB2B = b2bFilter.property("value");
+                const selectedSalesChannel = salesChannelFilter.property("value");
+                svg.selectAll("*").remove(); // Clear previous chart
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+            });
+
+            categoryFilter.on("change", function() {
+                const selectedCategory = this.value;
+                const selectedMonth = monthFilter.property("value");
+                const selectedFulfilment = fulfilmentFilter.property("value");
+                const selectedB2B =  b2bFilter.property("value");
+                const selectedSalesChannel = salesChannelFilter.property("value");
+                svg.selectAll("*").remove(); // Clear previous chart
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+            });
+
+            b2bFilter.on("change", function() {
+                const selectedB2B = this.value;
+                const selectedMonth = monthFilter.property("value");
+                const selectedCategory = categoryFilter.property("value");
+                const selectedFulfilment =  fulfilmentFilter.property("value");
+                const selectedSalesChannel = salesChannelFilter.property("value");
+                svg.selectAll("*").remove(); // Clear previous chart
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+            });
+
+            monthFilter.on("change", function() {
+                const selectedMonth = this.value;
+                const selectedFulfilment = fulfilmentFilter.property("value");
+                const selectedCategory = categoryFilter.property("value");
+                const selectedB2B =  b2bFilter.property("value");
+                const selectedSalesChannel = salesChannelFilter.property("value");
+                svg.selectAll("*").remove(); // Clear previous chart
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+            })
+
+            salesChannelFilter.on("change", function() {
+                const selectedSalesChannel = this.value;
+                const selectedMonth = monthFilter.property("value");
+                const selectedFulfilment = fulfilmentFilter.property("value");
+                const selectedCategory = categoryFilter.property("value");
+                const selectedB2B =  b2bFilter.property("value");
+                svg.selectAll("*").remove(); // Clear previous chart
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+            })
+            const tooltip = d3.select("body").append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+        }).catch(function(error) {
+            console.log(error);
+        });
+    </script>
+</body>
+</html>

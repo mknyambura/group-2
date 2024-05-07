@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Sales by Category - Bubble Chart</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v3.js"></script>
+    <style>
+        /* CSS for red frame */
+        svg {
+            /* border: 2px solid rgb(0, 255, 213); /* Add red border */
+            display: flex; /* Ensure SVG behaves as block element */
+            max-width: 100%; /* Limit SVG width to its container */
+            /* height: auto; Maintain aspect ratio */
+            margin: auto; 
+            padding-bottom: 150px;
+
+        }
+
+        /* CSS to reduce thickness of axis lines */
+        .x-axis path,
+        .x-axis line,
+        .y-axis path,
+        .y-axis line {
+            fill: none;
+            stroke: black; /* Set color */
+            shape-rendering: crispEdges;
+            stroke-width: 1px; /* Adjust thickness as needed */
+        }
+
+        /* Add margin to the filters */
+        .filter {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px; /* Adjust margin as needed */
+            /* align-items: center; */
+            /* text-align: center; Center the filter */
+        }
+        .links {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            margin: 5px;
+            padding: 5px;
+        }
+        .links a{
+            text-decoration: none;
+            color: #000;
+        }
+        .links a:hover{
+            text-decoration: underline;
+            color: white;
+            margin: 8px;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 18px;
+            transition: 400ms ease-in-out;
+            background: #000;
+        }
+
+        /* Tooltip CSS */
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+        }
+
+        .data-label {
+            font-size: 14px; /* Increase font size */
+        }
+        #navbar {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 15px;
+            padding: 15px;
+        }
+        .description {
+            display: flex;
+            flex-direction: column;
+            width: 400px;
+        }
+        .chart-description {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .chart-filters {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add margin-bottom to the filters -->
+    <div id="navbar">
+        <div class="header">
+            <div class="links">
+                <a href="/index.html">Home Page</a>
+                <a href="/Kariuki/sales-analysis.html">Sales Analysis</a>
+                <a href="/Chuku/product-analysis.html">Product Analysis </a>
+                <a href="/Zubair/courier-analysis.html">Courier Analysis</a>
+                <a href="/Mulukuri/order-status.html">Order Status Analysis</a>
+            </div>
+            <div class="teesside-logo">
+                <img src="/images/TeessideUniversity2b_black.png" alt="">
+                <h2><strong>Module Code:</strong> CIS4014-N</h2>
+            </div>
+        </div>
+        <div class="chart-filters">
+            <div class="filter">
+                <div>
+                    <label for="courierStatusFilter">Filter by Courier Status:</label>
+                    <select id="courierStatusFilter">
+                        <option value="All">All</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter">
+                        <option value="All">All</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="categoryFilter">Filter by Category:</label>
+                    <select id="categoryFilter">
+                        <option value="All">All</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="quantityFilter">Filter by Quantity:</label>
+                    <select id="quantityFilter">
+                        <option value="All">All</option>
+                    </select>
+                </div>
+            </div>
+        
+              <!-- Increase the width and height of the SVG -->
+            <div class="chart-description">
+                <svg width="1500" height="1200" class="bubble-chart"></svg>
+                <div class="description">
+                    <h3>Geographical Analysis</h3>
+                    <p>
+                        This analysis provides an interactive way to explore and visualize Amazon sales data by region, allowing users to gain insights and identify trends based on different filtering criteria
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+  
+
+    <!-- Tooltip -->
+    <div class="tooltip" style="display: none;"></div>
+
+    <script>
+        // SVG Size
+        const width = 1400;
+        const height = 1200;
+        // Margins
+        const margin = { top: 120, right: 50, bottom: 0, left: 50 };
+        const graphWidth = width - margin.left - margin.right;
+        const graphHeight = height - margin.top - margin.bottom;
+
+        // Define color scale
+        const colorScale = d3.scale.ordinal().range(d3.scale.category10().range());
+
+        // Create SVG element
+        const svg = d3.select("svg");
+
+        // Tooltip
+        const tooltip = d3.select(".tooltip");
+
+        // Load data
+        d3.json("/Ijogho/Amazon Sale Report - Clean - Clean.json", function(data) {
+            amazonData = data;
+            console.log(data);
+
+            // Extract unique courier status values
+            const uniqueCourierStatus = [...new Set(data.map(d => d.CourierStatus))];
+            // Populate the select element with unique status options
+            const courierStatusFilter = d3.select("#courierStatusFilter");
+            courierStatusFilter.selectAll("option")
+                .data(uniqueCourierStatus)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            // Extract unique status values
+            const uniqueStatus = [...new Set(data.map(d => d.Status))];
+            // Populate the select element with unique status options
+            const statusFilter = d3.select("#statusFilter");
+            statusFilter.selectAll("option")
+                .data(uniqueStatus)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            // Extract unique category values
+            const uniqueCategory = [...new Set(data.map(d => d.Category))];
+            // Populate the select element with unique category options
+            const categoryFilter = d3.select("#categoryFilter");
+            categoryFilter.selectAll("option")
+                .data(uniqueCategory)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+            
+            // Extract unique category values
+            const uniqueQuantity = [...new Set(data.map(d => d.Qty))];
+            // Populate the select element with unique category options
+            const quantityFilter = d3.select("#quantityFilter");
+            quantityFilter.selectAll("option")
+                .data(uniqueQuantity)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            // Define radius scale for bubble size based on total orders
+            const radiusScale = d3.scale.sqrt()
+                .range([50, 100]); // Define range of bubble sizes
+
+            // Function to update chart based on selected filters
+            function updateChart(selectedCourierStatus, selectedStatus, selectedCategory, selectedQuantity) {
+                // Filter data based on selected filters
+                let filteredData = data;
+                if (selectedCourierStatus !== "All"){
+                    filteredData = filteredData.filter(d => d.CourierStatus === selectedCourierStatus)
+                }
+                if (selectedStatus !== "All") {
+                    filteredData = filteredData.filter(d => d.Status === selectedStatus);
+                }
+                if (selectedCategory !== "All") {
+                    filteredData = filteredData.filter(d => d.Category === selectedCategory);
+                }
+                if (selectedQuantity !== "All") {
+                    filteredData = filteredData.filter(d => d.Qty === selectedQuantity);
+                }
+
+                // Group filtered data by state and calculate total orders for each state
+                const ordersByState = d3.nest()
+                    .key(d => d["ship-state"])
+                    .rollup(values => values.length)
+                    .entries(filteredData);
+
+                // Update domain of radius scale based on filtered data
+                radiusScale.domain([0, d3.max(ordersByState, d => d.values)]);
+
+                // Create a force simulation
+                const simulation = d3.layout.force()
+                    .nodes(ordersByState)
+                    .size([width, height])
+                    .gravity(0.1)
+                    .charge(d => -radiusScale(d.values) * 10)
+                    .on("tick", tick)
+                    .start();
+
+                // Remove existing bubbles before appending new ones
+                svg.selectAll(".bubble").remove();
+                svg.selectAll(".data-label").remove();
+
+                // Draw bubbles
+                const bubbles = svg.selectAll("circle")
+                    .data(ordersByState)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "bubble")
+                    .attr("r", d => radiusScale(d.values))
+                    .style("fill", (d, i) => colorScale(i))
+                    .style("opacity", 0.7)
+                    .on("mouseover", function(d) {
+                        d3.select(this)
+                            .transition()
+                            .duration(500)
+                            .attr("r", d => radiusScale(d.values) * 1.5); // Zoom the bubble
+                        tooltip.style("display", "block").html(`State: ${d.key}<br>Total Orders: ${d.values}`)
+                            .style("left", (d3.event.pageX + 10) + "px")
+                            .style("top", (d3.event.pageY - 20) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this)
+                            .transition()
+                            .duration(300)
+                            .attr("r", d => radiusScale(d.values)); // Restore the original size
+                        tooltip.style("display", "none");
+                    });
+
+                // Add data labels
+                const labels = svg.selectAll(".data-label")
+                    .data(ordersByState)
+                    .enter()
+                    .append("text")
+                    .attr("class", "data-label")
+                    .text(d => d.key) // State name as label
+                    .style("text-anchor", "middle")
+                    .style("font-size", "15px")
+                    .attr("dy", "0.3em"); // Adjust vertical position
+
+                function tick() {
+                    bubbles.attr("cx", d => d.x)
+                        .attr("cy", d => d.y);
+
+                    labels.attr("x", d => d.x)
+                        .attr("y", d => d.y);
+                }
+            }
+
+            // Initial chart rendering
+            updateChart("All", "All", "All", "All");
+
+            // Add event listener to the courier status filter select element
+            document.getElementById("courierStatusFilter").addEventListener("change", function() {
+                const selectedCourierStatus = this.value;
+                const selectedStatus = document.getElementById("statusFilter").value;
+                const selectedCategory = document.getElementById("categoryFilter").value;
+                const selectedQuantity = document.getElementById("quantityFilter").value;
+                updateChart(selectedCourierStatus, selectedStatus, selectedCategory, selectedQuantity);
+            });
+
+            // Add event listener to the status filter select element
+            document.getElementById("statusFilter").addEventListener("change", function() {
+                const selectedStatus = this.value;
+                const selectedCourierStatus = document.getElementById("courierStatusFilter").value;
+                const selectedCategory = document.getElementById("categoryFilter").value;
+                const selectedQuantity = document.getElementById("quantityFilter").value;
+                updateChart(selectedCourierStatus, selectedStatus, selectedCategory, selectedQuantity);
+            });
+
+            // Add event listener to the category filter select element
+            document.getElementById("categoryFilter").addEventListener("change", function() {
+                const selectedCategory = this.value;
+                const selectedCourierStatus = document.getElementById("courierStatusFilter").value;
+                const selectedStatus = document.getElementById("statusFilter").value;
+                const selectedQuantity = document.getElementById("quantityFilter").value;
+                updateChart(selectedCourierStatus, selectedStatus, selectedCategory, selectedQuantity);
+            });
+            // Add event listener to the quant filter select element
+            document.getElementById("quantityFilter").addEventListener("change", function() {
+                const selectedQuantity = this.value;
+                const selectedCategory = document.getElementById("courierStatusFilter").value;
+                const selectedCourierStatus = document.getElementById("courierStatusFilter").value;
+                const selectedStatus = document.getElementById("statusFilter").value;
+                updateChart(selectedCourierStatus, selectedStatus, selectedCategory, selectedQuantity);
+            });
+        });
+    </script>
+</body>
+</html>
