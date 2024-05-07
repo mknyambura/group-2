@@ -1,0 +1,142 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .links {
+            display: flex;
+            flex-direction: column;
+            color: #000;
+        }
+        .links:hover {
+            color: orange;
+            cursor: pointer;
+        }
+        .body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        body {
+            margin: 20px 100px 20px 100px;
+            padding: 20px 100px 20px 100px;
+            align-items: center;
+        }
+        .footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .link {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="body">
+        <div>
+            <h1>Interactive Visualisation ICA - Group B</h1>
+            <div class="header">
+                <div>
+                    <h2>Members</h2>
+                    <ul>
+                        <li>Mercy Kariuki - D3040021</li>
+                        <li>Nkechi Chuku - D3196043</li>
+                        <li>Samson Ijogho - C2441395</li>
+                        <li>Usman Muhammad Zubair - S3248633</li>
+                        <li>Srilakshmi Mulukuri - D3750689</li>
+                    </ul>                    
+                </div>
+                <div class="logo">
+                    <img src="images\TeessideUniversity2b_black.png" alt="Teesside University Logo">
+                    <div>
+                        <h2><strong>Module Code:</strong> CIS4014-N</h2>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+            <div>
+                <h2>About the dataset</h2>
+                <h4>Introduction</h4>
+                <p>
+                    The Amazon Sales Dataset from <a href="https://www.kaggle.com/datasets/thedevastator/unlock-profits-with-e-commerce-sales-data">Kaggle</a> provides a comprehensive record of sales transactions made on the Amazon platform during a specific time period. 
+                    The dataset encompasses various attributes associated with each transaction, including order details, product information, shipping details, and order status. 
+                    This dataset serves as a valuable resource for conducting analyses related to sales trends, customer behavior, and inventory management on the Amazon platform.
+                </p>
+                <hr/>
+                <h4>Dataset description</h4>
+                    <ul>
+                        <li><strong>index:</strong> A unique identifier for each row or record.</li>
+                        <li><strong>Order ID:</strong> Unique identifier for each order placed.</li>
+                        <li><strong>Date:</strong> Date when the order was placed.</li>
+                        <li><strong>Status:</strong> Status of the order (e.g., Shipped, Cancelled, Shipped - Delivered to Buyer).</li>
+                        <li><strong>Fulfilment:</strong> Indicates whether the order was fulfilled by a merchant or by Amazon.</li>
+                        <li><strong>Sales Channel:</strong> The channel through which the sale was made (e.g., Amazon.in)</li>
+                        <li><strong>ship-service-level:</strong> The service level used for shipping the order.</li>
+                        <li><strong>Style:</strong> Style of the product.</li>
+                        <li><strong>SKU:</strong> Stock-keeping unit, a unique identifier for each distinct product and service.</li>
+                        <li><strong>Category:</strong> Category of the product.</li>
+                        <li><strong>Size:</strong> Size of the product (if applicable).</li>
+                        <li><strong>ASIN:</strong> Amazon Standard Identification Number, a unique identifier for products on Amazon.</li>
+                        <li><strong>Courier Status:</strong> Status of the courier handling the delivery.</li>
+                        <li><strong>Qty:</strong> Quantity of items ordered.</li>
+                        <li><strong>currency:</strong> Currency used for the transaction.</li>
+                        <li><strong>Amount:</strong> Total amount of the transaction.</li>
+                        <li><strong>ship-city:</strong> City where the order was shipped.</li>
+                        <li><strong>ship-state:</strong> State where the order was shipped.</li>
+                        <li><strong>ship-postal-code:</strong> Postal code of the shipping address.</li>
+                        <li><strong>ship-country:</strong> Country where the order was shipped.</li>
+                        <li><strong>long:</strong> Longitude coordinate of the shipping address.</li>
+                        <li><strong>lat:</strong> Latitude coordinate of the shipping address.</li>
+                        <li><strong>state-id:</strong> State identification code.</li>
+                        <li><strong>promotion-ids:</strong> IDs of any promotions applied to the order.</li>
+                        <li><strong>B2B:</strong> Indicates if the transaction was business-to-business.</li>
+                        <li><strong>fulfilled-by:</strong> Indicates if the order was fulfilled by Amazon or another entity.</li>
+                        <li><strong>Month:</strong> Month when the order was placed.</li>
+                    </ul>
+                <hr/>
+                <h4>Potential Applications</h4>
+                <ul class="link">
+                    <li>
+                        <a href="Kariuki/sales-analysis.html" class="links"><strong>Sales Trend Analysis:</strong></a> The dataset can be utilized to analyze sales trends over time, identify peak sales periods, and evaluate the performance of different product categories.
+                    </li>
+                    <li>
+                        <a href="Chuku/product-analysis.html" class="links"><strong>Product Analysis:</strong></a> By examining order statuses and fulfillment details, the dataset can provide insights into customer preferences, purchasing patterns, and satisfaction levels. 
+                    </li>
+                    <li>
+                        <a href="Ijogho/geographical.html" class="links"><strong>Geographic Analysis:</strong></a> The inclusion of shipping details and geographical coordinates enables geographical analysis, allowing researchers to study regional variations in sales patterns and customer demographics.
+                    </li>
+                    <li>
+                        <a href="Zubair/courier-analysis.html" class="links"><strong>Courier Analysis:</strong></a>Examine the performance and effectiveness of different courier services utilized for delivering Amazon sales transactions. This analysis aims to provide insights into various aspects of courier services, including delivery times, reliability, geographical coverage, and customer satisfaction. 
+                    </li>
+                    <li>
+                        <a href="Mulukuri/order-status.html" class="links"><strong>Order Status Analysis:</strong></a>Provide insights into various aspects of order status, including order processing times, fulfillment rates, cancellation rates, and customer satisfaction levels at different stages of the order journey.
+                    </li>
+                </ul>
+            </div>
+
+            <hr/>
+        </div>
+        <!-- <hr/> -->
+        <div class="footer">
+            <h4>Copyright © All Rights Reserved</h4>
+        </div>
+    </div>
+
+</body>
+</html>
