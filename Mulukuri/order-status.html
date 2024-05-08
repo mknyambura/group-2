@@ -152,7 +152,7 @@
       });
 
       // Get unique courier statuses
-      var courierStatuses = Array.from(new Set(data.map(function(d) { return d.CourierStatus; })));
+      var courierStatuses = Array.from(new Set(data.map(function(d) { return d["Courier Status"]; })));
       // Populate courier status filter
       var courierStatusFilter = d3.select("#courierStatus");
       courierStatusFilter.append("option").attr("value", "All").text("All Courier Statuses");
@@ -194,7 +194,7 @@
           filteredData = filteredData.filter(function(d) { return d.Category === selectedCategory; });
         }
         if (selectedCourierStatus !== "All") {
-          filteredData = filteredData.filter(function(d) { return d.CourierStatus === selectedCourierStatus; });
+          filteredData = filteredData.filter(function(d) { return d["Courier Status"] === selectedCourierStatus; });
         }
         if (selectedShipState !== "All") {
           filteredData = filteredData.filter(function(d) { return d["ship-state"] === selectedShipState; });

@@ -206,7 +206,7 @@
             const categories = new Set();
             const b2bs = new Set();
             const months = new Set();
-            const salesChannels = new Set();
+            // const salesChannels = new Set();
 
             data.forEach(function(d) {
                 const courierStatus = d["Courier Status"];
@@ -215,15 +215,15 @@
                 const category = d.Category;
                 const b2b = d.B2B;
                 const month = d.Month;
-                const salesChannel = d.SalesChannel; 
+                // const salesChannel = d.SalesChannel; 
 
-                courierStatuses[courierStatus] = (courierStatuses[courierStatus] || 0) + 1;
+                courierStatuses[courierStatus] = (courierStatuses[courierStatus] || 0) + parseFloat(d.index);
                 
                 fulfilments.add(fulfilment);
                 categories.add(category);
                 b2bs.add(b2b);
                 months.add(month);
-                salesChannels.add(salesChannel);
+                // salesChannels.add(salesChannel);
             });
 
             const courierStatusData = Object.entries(courierStatuses);
@@ -232,7 +232,7 @@
             const categoryArray = Array.from(categories);
             const b2bArray = Array.from(b2bs);
             const monthArray = Array.from(months);
-            const salesChannelArray = Array.from(salesChannels);
+            // const salesChannelArray = Array.from(salesChannels);
 
             // Populate fulfilment filter dropdown
             const fulfilmentFilter = d3.select("#fulfilment-filter");
@@ -266,13 +266,13 @@
                 .text(d => d)
                 .attr("value", d => d);
             
-            // Populate sales channel filter dropdown
-            const salesChannelFilter = d3.select("#sales-channel-filter");
-            salesChannelFilter.selectAll("option")
-                .data(["All"].concat(salesChannelArray))
-                .enter().append("option")
-                .text(d => d)
-                .attr("value", d => d);
+            // // Populate sales channel filter dropdown
+            // const salesChannelFilter = d3.select("#sales-channel-filter");
+            // salesChannelFilter.selectAll("option")
+            //     .data(["All"].concat(salesChannelArray))
+            //     .enter().append("option")
+            //     .text(d => d)
+            //     .attr("value", d => d);
 
 
             
@@ -318,7 +318,7 @@
                                .outerRadius(radius * 0.9);
 
             // Function to update chart based on selected fulfilment and category
-            function updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel) {
+            function updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth) {
 
                 let filteredCourierStatusData = data;
                 if (selectedFulfilment !== "All") {
@@ -333,9 +333,9 @@
                 if (selectedMonth !== "All"){
                     filteredCourierStatusData = filteredCourierStatusData.filter(d => d.Month === selectedMonth);
                 }
-                if (selectedSalesChannel !== "All"){
-                    filteredCourierStatusData = filteredCourierStatusData.filter(d => d.SalesChannel === selectedSalesChannel);
-                }
+                // if (selectedSalesChannel !== "All"){
+                //     filteredCourierStatusData = filteredCourierStatusData.filter(d => d.SalesChannel === selectedSalesChannel);
+                // }
 
                 const filteredCourierStatuses = {};
                 filteredCourierStatusData.forEach(function(d) {
@@ -439,9 +439,9 @@
                 const selectedMonth = monthFilter.property("value");
                 const selectedCategory = categoryFilter.property("value");
                 const selectedB2B = b2bFilter.property("value");
-                const selectedSalesChannel = salesChannelFilter.property("value");
+                // const selectedSalesChannel = salesChannelFilter.property("value");
                 svg.selectAll("*").remove(); // Clear previous chart
-                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth);
             });
 
             categoryFilter.on("change", function() {
@@ -449,9 +449,9 @@
                 const selectedMonth = monthFilter.property("value");
                 const selectedFulfilment = fulfilmentFilter.property("value");
                 const selectedB2B =  b2bFilter.property("value");
-                const selectedSalesChannel = salesChannelFilter.property("value");
+                // const selectedSalesChannel = salesChannelFilter.property("value");
                 svg.selectAll("*").remove(); // Clear previous chart
-                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth);
             });
 
             b2bFilter.on("change", function() {
@@ -459,9 +459,9 @@
                 const selectedMonth = monthFilter.property("value");
                 const selectedCategory = categoryFilter.property("value");
                 const selectedFulfilment =  fulfilmentFilter.property("value");
-                const selectedSalesChannel = salesChannelFilter.property("value");
+                // const selectedSalesChannel = salesChannelFilter.property("value");
                 svg.selectAll("*").remove(); // Clear previous chart
-                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth);
             });
 
             monthFilter.on("change", function() {
@@ -469,20 +469,20 @@
                 const selectedFulfilment = fulfilmentFilter.property("value");
                 const selectedCategory = categoryFilter.property("value");
                 const selectedB2B =  b2bFilter.property("value");
-                const selectedSalesChannel = salesChannelFilter.property("value");
+                // const selectedSalesChannel = salesChannelFilter.property("value");
                 svg.selectAll("*").remove(); // Clear previous chart
-                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
+                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth);
             })
 
-            salesChannelFilter.on("change", function() {
-                const selectedSalesChannel = this.value;
-                const selectedMonth = monthFilter.property("value");
-                const selectedFulfilment = fulfilmentFilter.property("value");
-                const selectedCategory = categoryFilter.property("value");
-                const selectedB2B =  b2bFilter.property("value");
-                svg.selectAll("*").remove(); // Clear previous chart
-                updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth, selectedSalesChannel);
-            })
+            // salesChannelFilter.on("change", function() {
+            //     const selectedSalesChannel = this.value;
+            //     const selectedMonth = monthFilter.property("value");
+            //     const selectedFulfilment = fulfilmentFilter.property("value");
+            //     const selectedCategory = categoryFilter.property("value");
+            //     const selectedB2B =  b2bFilter.property("value");
+            //     svg.selectAll("*").remove(); // Clear previous chart
+            //     updateChart(selectedFulfilment, selectedCategory, selectedB2B, selectedMonth);
+            // })
             const tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
                     .style("opacity", 0);

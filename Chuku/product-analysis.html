@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doughnut Chart</title>
+    <title>Product Analysis</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         @keyframes bounce {
@@ -245,6 +245,7 @@
         d3.json("/Chuku/Amazon Sale Report - Clean - Clean.json").then(function(data) {
             // Extract categories, sizes, and quantities
             console.log(data)
+            
             const categories = {};
             const sizes = new Set();
             const quantities = new Set();
@@ -257,6 +258,7 @@
                 const style = d.Style;
 
                 categories[category] = (categories[category] || 0) + parseFloat(d.index);
+                
                 sizes.add(size);
                 quantities.add(quantity);
                 styles.add(style);

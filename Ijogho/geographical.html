@@ -192,7 +192,7 @@
             console.log(data);
 
             // Extract unique courier status values
-            const uniqueCourierStatus = [...new Set(data.map(d => d.CourierStatus))];
+            const uniqueCourierStatus = [...new Set(data.map(d => d["Courier Status"]))];
             // Populate the select element with unique status options
             const courierStatusFilter = d3.select("#courierStatusFilter");
             courierStatusFilter.selectAll("option")
@@ -240,7 +240,7 @@
                 // Filter data based on selected filters
                 let filteredData = data;
                 if (selectedCourierStatus !== "All"){
-                    filteredData = filteredData.filter(d => d.CourierStatus === selectedCourierStatus)
+                    filteredData = filteredData.filter(d => d["Courier Status"] === selectedCourierStatus)
                 }
                 if (selectedStatus !== "All") {
                     filteredData = filteredData.filter(d => d.Status === selectedStatus);
